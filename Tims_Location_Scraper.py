@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import pandas as pd
 import numpy as np
+import geocoder
 
 url = "https://locations.timhortons.ca/en/"
 
@@ -113,4 +114,15 @@ sites_df = pd.DataFrame(sites)
 sites_df = pd.merge(cities_df, sites_df, on = ['Provience','cities'])
 
 final_df = pd.merge(Provience_df, sites_df, on='Provience', how='left')
+
+def get_coord(addr, attempt=1, max_attempt=5):
+  result = geocoder.arcgis(addr)
+  if result.ok:
+    lat, lon = result.latlng
+  elif attempt >= max_attempt:
+    lat, lon = 0, 0
+  else:
+    return get_coord(addr, attempt=attempt+1, max_attempt=max_attempt)
+  return [lat, lon]
+
 final_df.to_csv('./Tim_Hortons_Locations.csv', index=False)
