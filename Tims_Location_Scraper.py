@@ -90,9 +90,9 @@ for Provience, city, hrefs_city in zip(cities['Provience'], cities['cities'],cit
 
     for feature in features_list:
       if feature in features_avail:
-        sites[feature].append(True)
+        sites[feature].append('Yes')
       else:
-        sites[feature].append(False)
+        sites[feature].append('No')
 
     dine_in_div = soup_site.find('div', class_='lp-label', string='Dine-In Hours')
     if dine_in_div:
@@ -118,11 +118,13 @@ final_df = pd.merge(Provience_df, sites_df, on='Provience', how='left')
 def get_coord(addr, attempt=1, max_attempt=5):
   result = geocoder.arcgis(addr)
   if result.ok:
-    lat, lon = result.latlng
+    lat, lng = result.latlng
   elif attempt >= max_attempt:
-    lat, lon = 0, 0
+    lat, lng = 0, 0
   else:
     return get_coord(addr, attempt=attempt+1, max_attempt=max_attempt)
-  return [lat, lon]
+  return [lat, lng]
+
+final_df[['lat', 'lng']] = final_df.apply(lambda row:pd.Series(get_coord(row['address'])),axis=1)
 
 final_df.to_csv('./Tim_Hortons_Locations.csv', index=False)
